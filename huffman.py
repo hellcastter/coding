@@ -6,8 +6,19 @@ DICTIONARY = dict[str, str]
 
 class Huffman:
     """ Huffman algorithm """
-    def encode(self, message: str):
-        """ encode by Huffman algorithm """
+    def encode(self, message: str) -> str:
+        """encode by Huffman algorithm
+
+        Args:
+            message (str): message to encode   
+
+        Returns:
+            str: encoded message
+
+        >>> huffman = Huffman()
+        >>> huffman.encode('Lorem ipsum dolor sit.')
+        '1111110100011101011100010110110011100101110011100101110101010001000010101100011110'
+        """
         dictionary = self.get_dictionary(message)
 
         # get code for every character in message
@@ -15,7 +26,18 @@ class Huffman:
         return result
 
     def get_dictionary(self, message: str) -> DICTIONARY:
-        """ dictionary of Huffman code """
+        """dictionary of Huffman code
+
+        Args:
+            message (str): message to encode
+
+        Returns:
+            DICTIONARY: dictionary that was used to encode
+
+        >>> huffman = Huffman()
+        >>> huffman.get_dictionary('abacabacacabaca')
+        {'b': '00', 'a': '1', 'c': '01'}
+        """
         unique = set(message)
         probabilities = []
 
@@ -29,6 +51,10 @@ class Huffman:
         return dictionary
 
     def __create_scheme(self, probabilities):
+        """
+        encoding scheme
+        It has to be a tree, but I decided to work with lists
+        """
         # if only 1 element in string
         if len(probabilities) <= 1:
             return [[probabilities[0][0], str(probabilities[0][1]), probabilities[0][2]]]
@@ -81,6 +107,10 @@ class Huffman:
 
         Returns:
             str: decoded message
+
+        >>> huffman = Huffman()
+        >>> huffman.decode('1001011001011011001011', {'b': '00', 'a': '1', 'c': '01'})
+        'abacabacacabaca'
         """
         reverse_dictionary = {value: key for key, value in dictionary.items()}
 
@@ -100,22 +130,28 @@ class Huffman:
 
         return result
 
-    def assertion(self, message: str):
+    def assertion(self, message: str, verbose = False):
         """Test a string. Prints encoded message, dictionary and 
         checks weather message == decode(encode(message)).
         In case it's not — returns error.
 
         Args:
             message (str): test message
+            verbose (bool, optional): Show full info. Defaults to False.
+
+        >>> huffman = Huffman()
+        >>> huffman.assertion('abaca')
         """
         encoded = self.encode(message)
-        print(encoded)
         dictionary = self.get_dictionary(message)
-        pprint(dictionary)
+
+        if verbose:
+            print(f"Encoded: {encoded}")
+            pprint(dictionary)
 
         assert message == self.decode(encoded, dictionary)
 
 
 if __name__ == "__main__":
     huffman = Huffman()
-    huffman.assertion('this is an example of a huffman tree')
+    huffman.assertion('this is an example of a huffman tree', verbose=True)
