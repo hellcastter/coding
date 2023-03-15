@@ -119,8 +119,13 @@ class LZ77:
             return None
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
+
+        name = file_path.split('/')[-1].split('.')[0] + '_encoded'
+        with open(f'{name}.txt', 'w', encoding='utf-8') as fil:
             obj = LZ77()
-            return obj.compress(content)
+            fil.write("".join([str(i[0]) + str(i[1]) + i[2] if i[2] is not None
+                               else str(i[0]) + str(i[1]) + ' ' for i in obj.compress(content)]))
+        return None
 
 
     def assertion(self, message: str) -> bool:
