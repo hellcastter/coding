@@ -1,5 +1,7 @@
 "Lempel-Ziv algorithm"
 from math import ceil
+from os import path
+
 
 class LZ77:
     """
@@ -33,16 +35,22 @@ class LZ77:
                 ind += 1
                 if message[start : ind + 1] not in buffer:
                     buffer *= 2
+            ext_buff = buffer
             buffer = copy_buff
             i = ind + 1
             # finding offset
             substr = message[start : i]
+            copy_substr = substr[:-1]
             while substr not in buffer:
-                substr = message[start : i]
                 i -= 1
+                substr = message[start : i]
             offset = 0 if len(substr) == 0 else buffer.rfind(substr)
             if len(substr) != 0:
                 offset = len(buffer) - offset
+            if offset != 0:
+                while copy_substr != ext_buff[
+                    len(buffer) - offset : len(buffer) - offset + len(copy_substr)]:
+                    offset -= 1
             # getting the next symbol
             if len(message[start : ind + 1]) == ind - start:
                 next_sym = None
@@ -78,7 +86,7 @@ class LZ77:
         if not all(len(i) == 3 and isinstance(i, tuple) for i in encoded_message):
             return None
         if not all(isinstance(i, int) and isinstance(j, int) and
-                   isinstance(z, None | str) for i, j, z in encoded_message):
+                   (z is None or isinstance(z, str)) for i, j, z in encoded_message):
             return None
         result = ''
         for offset, length, next_sym in encoded_message:
@@ -93,6 +101,28 @@ class LZ77:
         return result
 
 
+    @staticmethod
+    def read_compress_file(file_path: str):
+        """
+        Read content from file.
+
+        Args:
+            path (str): path to the existing file
+
+        Returns:
+            list[tuple[int, int, str]]: compressed message
+            (list of tuples with three elements: <offset, lenght, next>)
+        """
+        if not isinstance(file_path, str) or not path.exists(file_path):
+            return None
+        if not path.isfile(file_path):
+            return None
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            obj = LZ77()
+            return obj.compress(content)
+
+
     def assertion(self, message: str) -> bool:
         """
         Assert an initial message is equal to the encoded an decoded one.
@@ -105,6 +135,8 @@ class LZ77:
 
         >>> lz77 = LZ77()
         >>> lz77.assertion('abacabacabadaca')
+        True
+        >>> lz77.assertion('1100101110011100101110101010001000010101100011110')
         True
         """
         if not isinstance(message, str):
