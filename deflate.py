@@ -247,7 +247,8 @@ class Deflate:
         """
         lz77 = LZ77()
         huffman = Huffman()
-        encoded_lz77 = "".join([str(offset) + str(length) + symb
+        encoded_lz77 = "".join([str(offset) + str(length) + symb if symb is not None else
+                                str(offset) + str(length) + ' '
                                 for offset, length, symb in lz77.compress(message, buffer_size)])
         encoded_huffman, dictionary = huffman.encode(encoded_lz77)
         if to_file:
