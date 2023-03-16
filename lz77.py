@@ -122,8 +122,8 @@ class LZ77:
         return result
 
 
-    @staticmethod
-    def read_compress_file(file_path: str):
+    @classmethod
+    def read_compress_file(cls, file_path: str):
         """
         Read content from file.
 
@@ -147,10 +147,9 @@ class LZ77:
         name = file_path.split('/')[-1].split('.')[0] + '_encoded'
 
         with open(f'{name}.txt', 'w', encoding='utf-8') as fil:
-            obj = LZ77()
             result = []
 
-            for offset, length, next_character in obj.compress(content):
+            for offset, length, next_character in cls.compress(content):
                 result.append(f"{offset}{length}{next_character or ' '}")
 
             fil.write("".join(result))
