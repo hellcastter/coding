@@ -7,8 +7,7 @@ class LZ77:
     """
     Lempel-Ziv algorithm.
     """
-    @staticmethod
-    def compress(message: str, buffer_size: int = 5) -> list[tuple]:
+    def compress(self, message: str, buffer_size: int = 5) -> list[tuple]:
         """
         Compressing message with lz77 algorithm.
 
@@ -138,7 +137,6 @@ class LZ77:
             return None
 
         if not path.isfile(file_path):
-            print(f"There is not such file {file_path}")
             return None
 
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -157,8 +155,8 @@ class LZ77:
 
         return None
 
-    @classmethod
-    def assertion(cls, message: str) -> bool:
+
+    def assertion(self, message: str) -> bool:
         """
         Assert an initial message is equal to the encoded an decoded one.
 
@@ -170,14 +168,15 @@ class LZ77:
 
         >>> lz77 = LZ77()
         >>> lz77.assertion('abacabacabadaca')
+        True
         >>> lz77.assertion('1100101110011100101110101010001000010101100011110')
+        True
         """
         if not isinstance(message, str):
             return None
-
-        encoded = cls.compress(message)
-
-        assert message == cls.decompress(encoded)
+        obj = LZ77()
+        encoded = obj.compress(message)
+        return message == obj.decompress(encoded)
 
 
 if __name__ == "__main__":
