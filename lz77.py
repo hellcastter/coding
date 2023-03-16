@@ -183,3 +183,5 @@ class LZ77:
 if __name__ == "__main__":
     import doctest
     print(doctest.testmod())
+
+    LZ77.assertion("abacabacabadaca")
