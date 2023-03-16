@@ -11,7 +11,8 @@ class LZ77:
     """
     Lempel-Ziv algorithm.
     """
-    def compress(self, message: str, buffer_size: int = 5) -> list[tuple]:
+    @staticmethod
+    def compress(message: str, buffer_size: int = 5) -> list[tuple]:
         """
         Compressing message with lz77 algorithm.
 
@@ -21,7 +22,7 @@ class LZ77:
 
         Returns:
             list[tuple[int, int, str]]: compressed message
-            (list of tuples with three elements: <offset, lenght, next>)
+            (list of tuples with three elements: <offset, length, next>)
 
         >>> lz77 = LZ77()
         >>> lz77.compress('abacabacabadaca')
@@ -29,43 +30,57 @@ class LZ77:
         """
         if not all([isinstance(message, str), isinstance(buffer_size, int)]):
             return None
+
         result = []
         buffer = ''
         ind = 0
+
         while ind < len(message):
             start = ind
             copy_buff = buffer
+
             while message[start : ind + 1] in buffer and ind != len(message):
                 ind += 1
+
                 if message[start : ind + 1] not in buffer:
                     buffer *= 2
+
             ext_buff = buffer
             buffer = copy_buff
             i = ind + 1
+
             # finding offset
             substr = message[start : i]
             copy_substr = substr[:-1]
+
             while substr not in buffer:
                 i -= 1
                 substr = message[start : i]
+
             offset = 0 if len(substr) == 0 else buffer.rfind(substr)
+
             if len(substr) != 0:
                 offset = len(buffer) - offset
+
             if offset != 0:
                 while copy_substr != ext_buff[
                     len(buffer) - offset : len(buffer) - offset + len(copy_substr)]:
                     offset -= 1
+
             # getting the next symbol
             if len(message[start : ind + 1]) == ind - start:
                 next_sym = None
             else:
                 next_sym = message[start : ind + 1][-1]
+
             # forming tuples
             result.append((offset, len(message[start : ind]), next_sym))
+
             # updating buffer
             buffer += message[start : ind + 1]
             buffer = buffer[-buffer_size:] if len(buffer) > 5 else buffer
             ind += 1
+
         return result
 
 
@@ -87,23 +102,85 @@ class LZ77:
         """
         if not isinstance(encoded_message, list) or not isinstance(buffer_size, int):
             return None
+
         if not all(len(i) == 3 and isinstance(i, tuple) for i in encoded_message):
             return None
+
         if not all(isinstance(i, int) and isinstance(j, int) and
                    (z is None or isinstance(z, str)) for i, j, z in encoded_message):
             return None
+
         result = ''
+
         for offset, length, next_sym in encoded_message:
             buffer = result[-buffer_size:]
             start = len(buffer) - offset
             stop = start + length
             next_sym = '' if next_sym is None else next_sym
+
             if offset < length:
-                result += (buffer * ceil(length/offset))[start : stop] + next_sym
+                result += (buffer * ceil(length / offset))[start : stop] + next_sym
             else:
                 result += buffer[start : stop] + next_sym
+
         return result
 
+
+    @classmethod
+    def read_compress_file(cls, file_path: str):
+        """
+        Read content from file.
+
+        Args:
+            path (str): path to the existing file
+
+        Returns:
+            list[tuple[int, int, str]]: compressed message
+            (list of tuples with three elements: <offset, lenght, next>)
+        """
+        if not isinstance(file_path, str) or not path.exists(file_path):
+            return None
+
+        if not path.isfile(file_path):
+            print(f"There is not such file {file_path}")
+            return None
+
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        name = file_path.split('/')[-1].split('.')[0] + '_encoded'
+
+        with open(f'{name}.txt', 'w', encoding='utf-8') as fil:
+            result = []
+
+            for offset, length, next_character in cls.compress(content):
+                result.append(f"{offset}{length}{next_character or ' '}")
+
+            fil.write("".join(result))
+
+        return None
+
+    @classmethod
+    def assertion(cls, message: str) -> bool:
+        """
+        Assert an initial message is equal to the encoded an decoded one.
+
+        Args:
+            message (str): message to check the correctness
+
+        Returns:
+            bool: True if they are equal, False otherwise.
+
+        >>> lz77 = LZ77()
+        >>> lz77.assertion('abacabacabadaca')
+        >>> lz77.assertion('1100101110011100101110101010001000010101100011110')
+        """
+        if not isinstance(message, str):
+            return None
+
+        encoded = cls.compress(message)
+
+        assert message == cls.decompress(encoded)
 
 class Huffman:
     """ Huffman algorithm """
@@ -228,8 +305,8 @@ class Deflate:
     """
     DEFLATE algorithm.
     """
-
-    def deflate_encode(self, message: str, buffer_size: int = 5, to_file = False,
+    @classmethod
+    def deflate_encode(cls, message: str, buffer_size: int = 5, to_file = False,
                        return_dict = False):
         """
         DEFLATE algorithm.
@@ -245,19 +322,25 @@ class Deflate:
         >>> defl.deflate_encode('Hello')
         '11010011010111011000000111'
         """
-        lz77 = LZ77()
         huffman = Huffman()
-        encoded_lz77 = "".join([str(offset) + str(length) + symb
-                                for offset, length, symb in lz77.compress(message, buffer_size)])
+
+        encoded_lz77 = []
+
+        for offset, length, next_character in LZ77.compress(message, buffer_size):
+            encoded_lz77.append(f"{offset}{length}{next_character or ' '}")
+
+        encoded_lz77 = "".join(encoded_lz77)
+
         encoded_huffman, dictionary = huffman.encode(encoded_lz77)
+
         if to_file:
             with open('deflate.txt', 'w', encoding='utf-8') as file:
                 file.write(encoded_huffman)
-            return None
+
         if return_dict:
             return encoded_huffman, dictionary
-        return encoded_huffman
 
+        return encoded_huffman
 
     def deflate_decode(self, encoded_str: str, dictionary: DICTIONARY, buffer_size: int = 5):
         """
@@ -277,12 +360,15 @@ class Deflate:
         """
         if not isinstance(encoded_str, str) or not isinstance(buffer_size, int):
             return None
+
         lz77 = LZ77()
         huffman = Huffman()
+
         decoded_huffman = huffman.decode(encoded_str, dictionary)
         list_of_tuples = [(int(decoded_huffman[i]), int(decoded_huffman[i + 1]),
                            decoded_huffman[i + 2])
                            for i in range(0, len(decoded_huffman), 3)]
+
         return lz77.decompress(list_of_tuples, buffer_size)
 
 
@@ -300,6 +386,7 @@ class Deflate:
         """
         if not isinstance(file_path, str) or not path.exists(file_path):
             return None
+
         if not path.isfile(file_path):
             return None
 
@@ -307,10 +394,9 @@ class Deflate:
             content = file.read()
 
         name = file_path.split('/')[-1].split('.')[0] + '_encoded'
+
         with open(f'{name}.txt', 'w', encoding='utf-8') as file:
-            obj = Deflate()
-            file.write(obj.deflate_encode(content))
-        return None
+            file.write(Deflate.deflate_encode(content))
 
 
 if __name__ == "__main__":
