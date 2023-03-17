@@ -35,13 +35,17 @@ class LZ77:
             start = ind
             copy_buff = buffer
 
+            # finding the subsrting in the buffer
             while message[start : ind + 1] in buffer and ind != len(message):
                 ind += 1
 
+                # extending the buffer by two when the substring is not in it
                 if message[start : ind + 1] not in buffer:
                     buffer *= 2
 
+            # saving extended buffer to check the correctness of the offset
             ext_buff = buffer
+            # returning the buffer to it's initial form if it was extended
             buffer = copy_buff
             i = ind + 1
 
@@ -49,6 +53,8 @@ class LZ77:
             substr = message[start : i]
             copy_substr = substr[:-1]
 
+            # finding the substring in the buffer
+            # decrementing the i by one to find the substring
             while substr not in buffer:
                 i -= 1
                 substr = message[start : i]
@@ -58,10 +64,11 @@ class LZ77:
             if len(substr) != 0:
                 offset = len(buffer) - offset
 
-            if offset != 0:
-                while copy_substr != ext_buff[
-                    len(buffer) - offset : len(buffer) - offset + len(copy_substr)]:
-                    offset -= 1
+            # checking if the substring is in the extended buffer
+            # to get the correct offset
+            while copy_substr != ext_buff[
+                len(buffer) - offset : len(buffer) - offset + len(copy_substr)]:
+                offset -= 1
 
             # getting the next symbol
             if len(message[start : ind + 1]) == ind - start:
@@ -122,8 +129,8 @@ class LZ77:
         return result
 
 
-    @staticmethod
-    def read_compress_file(file_path: str):
+    @classmethod
+    def read_compress_file(cls, file_path: str):
         """
         Read content from file.
 
@@ -147,10 +154,9 @@ class LZ77:
         name = file_path.split('/')[-1].split('.')[0] + '_encoded'
 
         with open(f'{name}.txt', 'w', encoding='utf-8') as fil:
-            obj = LZ77()
             result = []
 
-            for offset, length, next_character in obj.compress(content):
+            for offset, length, next_character in cls.compress(content):
                 result.append(f"{offset}{length}{next_character or ' '}")
 
             fil.write("".join(result))
